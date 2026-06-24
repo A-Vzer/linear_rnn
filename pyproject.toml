@@ -1,0 +1,33 @@
+[project]
+name = "linear-rnn"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "einops>=0.8.2",
+    "flash-linear-attention>=0.5.1",
+    "matplotlib>=3.11.0",
+    "numpy>=2.5.0",
+    # cu128 index tops out at torch 2.11.0; this box's driver (CUDA 12.4) cannot
+    # run the cu13 wheels that torch>=2.12 resolves to. See [tool.uv.sources] below.
+    "torch>=2.11.0,<2.12",
+]
+
+# This box has an RTX 3090 on driver 550.x (CUDA 12.4). The default PyPI torch
+# resolves to a +cu130 (CUDA 13) wheel that the driver is too old to run. Route
+# torch through PyTorch's cu128 index; CUDA minor-version compatibility lets a
+# cu128 build run on the 12.4 driver.
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+    "nbconvert>=7.17.1",
+]
