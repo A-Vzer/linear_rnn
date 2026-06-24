@@ -32,3 +32,17 @@ noisy line, tracking a moving target, and so on.
 The two real layers need a GPU. The data, the scoring, and a stand-in CPU layer
 run anywhere. Set up the environment with `uv sync`, then open the notebooks in
 order.
+
+## What we found
+
+The extra work pays off when there is enough clean data and a lot to remember.
+MesaNet reaches low error from fewer examples, and on the recall task it holds up
+better than Gated DeltaNet as the number of stored facts grows. Most of that gain
+comes from just a couple of solve steps; doing more barely helps. The advantage
+shrinks or disappears when the target keeps moving or when data is scarce and
+noisy, and there the cheaper layer is about as good. In those cases the thing that
+actually matters is not how hard MesaNet solves but how much it forgets, or simply
+how much data it has. A quantity that MesaNet computes for free turns out to flag
+whether a recall was right.
+
+These are small models run once each, so read them as a direction, not a verdict.
