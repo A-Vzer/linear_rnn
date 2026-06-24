@@ -545,6 +545,8 @@ def _model_label(layer: str, cg_steps: int | None) -> str:
         return f"Mesa (CG={cg_steps})"
     if layer == "gated_deltanet":
         return "Gated DeltaNet"
+    if layer == "delta_net":
+        return "DeltaNet (ungated)"
     return layer
 
 

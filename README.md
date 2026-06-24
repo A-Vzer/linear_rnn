@@ -35,14 +35,18 @@ order.
 
 ## What we found
 
-The extra work pays off when there is enough clean data and a lot to remember.
-MesaNet reaches low error from fewer examples, and on the recall task it holds up
-better than Gated DeltaNet as the number of stored facts grows. Most of that gain
-comes from just a couple of solve steps; doing more barely helps. The advantage
-shrinks or disappears when the target keeps moving or when data is scarce and
-noisy, and there the cheaper layer is about as good. In those cases the thing that
-actually matters is not how hard MesaNet solves but how much it forgets, or simply
-how much data it has. A quantity that MesaNet computes for free turns out to flag
-whether a recall was right.
-
-These are small models run once each, so read them as a direction, not a verdict.
+MesaNet's extra work pays off when there is enough clean data and a lot to
+remember. It reaches low error from fewer examples, and on the recall task it
+holds up better than Gated DeltaNet as the number of stored facts grows. Most of
+that gain comes from just a couple of solve steps, and doing more barely helps.
+Once the target keeps moving or the data gets scarce and noisy the advantage
+shrinks or goes away, and the cheaper layer does about as well. There what matters
+is not how hard MesaNet solves but how much it forgets, and the forget rate is
+often the more decisive setting, since a couple of solve steps already get most of
+the solve while a bad forget rate can wreck recall. How much it matters depends on
+the task: clean recall wants to keep everything, a moving target wants some
+forgetting, and interference wants to keep the older facts, so working out that
+dependence is the obvious next step. MesaNet also produces a signal for free while
+it solves that flags whether a recall was right, and whether that can be put to
+use, say to hold back answers it is unsure about, is worth a look. These are small
+models run once each, so treat the results as a direction, not a verdict.

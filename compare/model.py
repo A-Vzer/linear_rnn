@@ -44,7 +44,7 @@ class ModelConfig:
     """Configuration for :class:`SequenceModel`.
 
     Attributes:
-        layer: "mesa" | "gated_deltanet" | "mock".
+        layer: "mesa" | "gated_deltanet" | "delta_net" | "mock".
         input_kind: "continuous" (Linear in-proj) | "tokens" (Embedding).
         output_kind: "regression" (scalar/pos) | "classification" (logits/pos).
         input_dim: feature dim for continuous inputs (token-dim of the sequence).
@@ -170,7 +170,7 @@ def build_mixing_layer(
     """Construct the swappable mixing layer, wrapped for a uniform interface.
 
     Args:
-        layer: "mesa" | "gated_deltanet" | "mock".
+        layer: "mesa" | "gated_deltanet" | "delta_net" | "mock".
         hidden_size: model width.
         num_heads: number of heads; head_dim = hidden_size // num_heads.
         layer_idx: block index (fla layers use it for the kv-cache).
@@ -276,11 +276,36 @@ def build_mixing_layer(
             with torch.no_grad():
                 inner.A_log.zero_()
                 inner.dt_bias.fill_(math.log(math.expm1(dt)))   # inverse softplus
+    elif layer == "delta_net":
+        from fla.layers.delta_net import DeltaNet  # lazy: needs Triton
+
+        if cg_steps is not None:
+            import warnings
+
+            warnings.warn("cg_steps is ignored for delta_net", stacklevel=2)
+        # Ungated DeltaNet: the delta rule WITHOUT the forget/decay gate (the "Gated"
+        # in Gated DeltaNet). Matched to GDN in every other respect so the gate is the
+        # only difference: expand_k=expand_v=1 -> key_dim=value_dim=hidden_size and
+        # head_dim = hidden_size // num_heads (same as Mesa/GDN); per-head output gate
+        # and short conv kept on. mesa_/gdn_retention_init do not apply (no decay gate).
+        inner = DeltaNet(
+            mode="chunk",
+            hidden_size=hidden_size,
+            expand_k=1.0,
+            expand_v=1.0,
+            num_heads=num_heads,
+            use_beta=True,
+            use_gate=True,          # per-head output gate (match Mesa/GDN)
+            use_short_conv=True,
+            layer_idx=layer_idx,
+            allow_neg_eigval=allow_neg_eigval,
+        )
     elif layer == "mock":
         inner = MockMixer(hidden_size, num_heads)
     else:
         raise ValueError(
-            f"unknown layer {layer!r}; expected 'mesa', 'gated_deltanet', or 'mock'"
+            f"unknown layer {layer!r}; expected 'mesa', 'gated_deltanet', "
+            "'delta_net', or 'mock'"
         )
 
     return _MixerAdapter(inner)
